@@ -1,0 +1,49 @@
+{
+  "name": "guitar-ear-trainer",
+  "version": "0.1.0",
+  "description": "Desktop app for guitar interval/chord/scale ear training",
+  "main": "out/main/index.js",
+  "private": true,
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "package": "electron-vite build && electron-builder",
+    "dev:web": "vite",
+    "build:web": "vite build",
+    "preview:web": "vite preview --host 0.0.0.0 --port 5174",
+    "gen:icons": "pwa-assets-generator",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.5.4",
+    "recharts": "^2.12.7",
+    "tone": "^15.0.4",
+    "lucide-react": "^0.408.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vite-pwa/assets-generator": "^0.2.6",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.19",
+    "electron": "^31.3.0",
+    "electron-builder": "^24.13.3",
+    "electron-vite": "^2.3.0",
+    "postcss": "^8.4.40",
+    "tailwindcss": "^3.4.7",
+    "typescript": "^5.5.4",
+    "vite": "^5.3.5",
+    "vite-plugin-pwa": "^0.20.1"
+  },
+  "build": {
+    "appId": "com.shahaf.guitar-ear-trainer",
+    "productName": "Guitar Ear Trainer",
+    "files": ["out/**/*"],
+    "win": { "target": "nsis" },
+    "mac": { "target": "dmg" },
+    "linux": { "target": "AppImage" }
+  }
+}

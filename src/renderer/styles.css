@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+body { -webkit-font-smoothing: antialiased; overflow: hidden; }
+
+button:focus-visible { outline: 2px solid theme('colors.accent.DEFAULT'); outline-offset: 2px; }
+
+/* Answer grid: auto-fit on narrow screens, JS-computed cols on wider screens. */
+.answer-grid {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+}
+@media (min-width: 640px) {
+  .answer-grid {
+    grid-template-columns: var(--cols);
+  }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.5; }
+  100% { transform: scale(1.9); opacity: 0;   }
+}
+.pulse-ring::before,
+.pulse-ring::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: theme('colors.accent.DEFAULT');
+  animation: pulse-ring 1.4s ease-out infinite;
+}
+.pulse-ring::after { animation-delay: 0.7s; }
+
+/* Range slider */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: #2a313c;
+  outline: none;
+  cursor: pointer;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #22d3ee;
+  cursor: pointer;
+  border: 2px solid #070b14;
+}
