@@ -1,4 +1,5 @@
 import { STRING_LABELS, fretToMidi, midiToPitchClass } from '@renderer/music/tuning';
+import { makePosition } from '@renderer/music/fretboard';
 import type { FretPosition, StringIndex } from '@shared/types';
 
 interface Marker {
@@ -12,13 +13,14 @@ interface Props {
   maxFret?: number;
   markers?: Marker[];
   height?: number;
+  onSelect?: (pos: FretPosition) => void;
 }
 
 const STRINGS: StringIndex[] = [0, 1, 2, 3, 4, 5]; // 0 = high E on top
 const INLAY_FRETS = new Set([3, 5, 7, 9, 15, 17, 19, 21]);
 const DOUBLE_INLAY_FRETS = new Set([12, 24]);
 
-export function Fretboard({ minFret = 0, maxFret = 12, markers = [], height = 220 }: Props) {
+export function Fretboard({ minFret = 0, maxFret = 12, markers = [], height = 220, onSelect }: Props) {
   const displayMin = Math.max(0, Math.min(minFret, maxFret));
   const displayMax = Math.max(displayMin + 4, maxFret);
   const fretCount = displayMax - displayMin + 1;
@@ -159,6 +161,23 @@ export function Fretboard({ minFret = 0, maxFret = 12, markers = [], height = 22
           </g>
         );
       })}
+
+      {/* Clickable cells (interactive mode) */}
+      {onSelect &&
+        Array.from({ length: fretCount }, (_, i) => displayMin + i).flatMap((f) =>
+          STRINGS.map((s) => (
+            <rect
+              key={`cell-${s}-${f}`}
+              x={padL + (f - displayMin) * fretW}
+              y={yForString(s) - stringGap / 2}
+              width={fretW}
+              height={stringGap}
+              fill="transparent"
+              style={{ cursor: 'pointer' }}
+              onClick={() => onSelect(makePosition(s, f))}
+            />
+          )),
+        )}
     </svg>
   );
 }

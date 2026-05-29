@@ -1,6 +1,7 @@
 import { useSettings } from '@renderer/store/settingsStore';
 import { INTERVALS } from '@renderer/music/intervals';
-import { ALL_STRINGS, STRING_LABELS } from '@renderer/music/tuning';
+import { CHORDS } from '@renderer/music/chords';
+import { ALL_STRINGS, STRING_LABELS, midiToNoteName } from '@renderer/music/tuning';
 import type { StringIndex } from '@shared/types';
 
 export function SettingsScreen() {
@@ -73,6 +74,28 @@ export function SettingsScreen() {
               Intervals unlock automatically as your accuracy crosses 85% on the last 20 reps.
             </p>
           )}
+        </Section>
+
+        {/* ── Chords ── */}
+        <Section label="Chords (Chord mode)">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {CHORDS.map((c) => {
+              const on = s.enabledChords.includes(c.id);
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => s.toggleChord(c.id)}
+                  className={[
+                    'flex flex-col items-start p-3 rounded-xl border-2 transition text-left',
+                    on ? 'border-accent bg-accent/10' : 'border-ink-600 bg-ink-700 hover:border-ink-500',
+                  ].join(' ')}
+                >
+                  <span className={['font-mono font-bold text-sm', on ? 'text-accent' : 'text-slate-300'].join(' ')}>{c.short}</span>
+                  <span className="text-[11px] text-slate-400 leading-tight mt-0.5">{c.name}</span>
+                </button>
+              );
+            })}
+          </div>
         </Section>
 
         {/* ── Fret range ── */}
@@ -180,6 +203,84 @@ export function SettingsScreen() {
           </div>
         </Section>
 
+        {/* ── Playback & aids ── */}
+        <Section label="Playback & Aids">
+          <div className="space-y-4">
+            <div>
+              <div className="text-sm text-slate-300 mb-2">How to play the two notes</div>
+              <div className="flex gap-2">
+                {(
+                  [
+                    { id: 'melodic', label: 'Melodic', desc: 'one then the other' },
+                    { id: 'harmonic', label: 'Harmonic', desc: 'both together' },
+                  ] as const
+                ).map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => s.setPlaybackMode(m.id)}
+                    className={[
+                      'flex flex-col items-start px-4 py-2 rounded-lg border-2 transition',
+                      s.playbackMode === m.id
+                        ? 'border-accent bg-accent/10 text-accent'
+                        : 'border-ink-600 bg-ink-700 text-slate-400 hover:border-ink-500',
+                    ].join(' ')}
+                  >
+                    <span className="text-sm font-medium">{m.label}</span>
+                    <span className="text-[11px] text-slate-500">{m.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <ToggleField
+              label="Reference tone before each question"
+              sub={`Anchor your ear with a fixed pitch (${midiToNoteName(s.referencePitch)}) first`}
+              checked={s.enableReferenceTone}
+              onChange={s.setEnableReferenceTone}
+            />
+            {s.enableReferenceTone && (
+              <SliderField
+                label={`Reference pitch — ${midiToNoteName(s.referencePitch)}`}
+                value={s.referencePitch}
+                min={36}
+                max={72}
+                onChange={(v) => s.setReferencePitch(v)}
+              />
+            )}
+
+            <ToggleField
+              label="Show notes before answering"
+              sub="Reveal both positions on the fretboard while you guess (learning crutch)"
+              checked={s.showNotesBeforeAnswer}
+              onChange={s.setShowNotesBeforeAnswer}
+            />
+          </div>
+        </Section>
+
+        {/* ── Melodic dictation ── */}
+        <Section label="Melodic Dictation">
+          <SliderField
+            label={`Melody length — ${s.melodyLength} notes`}
+            value={s.melodyLength}
+            min={3}
+            max={6}
+            onChange={(v) => s.setMelodyLength(v)}
+          />
+        </Section>
+
+        {/* ── Daily goal ── */}
+        <Section label="Daily Goal">
+          <SliderField
+            label={`${s.dailyGoalReps} reps per day`}
+            value={s.dailyGoalReps}
+            min={10}
+            max={300}
+            step={10}
+            onChange={(v) => s.setDailyGoalReps(v)}
+          />
+          <p className="text-xs text-slate-500">Tracked on the Stats screen; keep your day streak alive by hitting it.</p>
+        </Section>
+
         {/* ── Reset ── */}
         <div className="pt-2 border-t border-ink-700">
           <button
@@ -200,8 +301,8 @@ export function SettingsScreen() {
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3">
-      <h2 className="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">{label}</h2>
+    <section className="glass-card rounded-xl p-5 space-y-3">
+      <h2 className="text-[11px] uppercase tracking-[0.15em] text-on-surface-variant font-mono">{label}</h2>
       {children}
     </section>
   );

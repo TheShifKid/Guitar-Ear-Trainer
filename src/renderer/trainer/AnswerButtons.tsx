@@ -9,7 +9,7 @@ interface Props {
 
 export function AnswerButtons({ onAnswer }: Props) {
   const { enabledIntervals } = useSettings();
-  const { phase, question } = useSession();
+  const { phase, question, eliminatedIds } = useSession();
 
   const canAnswer = phase === 'awaiting';
   const isRevealed = phase === 'revealed';
@@ -19,19 +19,22 @@ export function AnswerButtons({ onAnswer }: Props) {
       {enabledIntervals.map((id, idx) => {
         const def = INTERVAL_BY_ID[id];
         const isCorrect = isRevealed && question?.intervalId === id;
+        const eliminated = canAnswer && eliminatedIds.includes(id);
 
         return (
           <button
             key={id}
-            onClick={() => canAnswer && onAnswer(id)}
-            disabled={!canAnswer && !isRevealed}
+            onClick={() => canAnswer && !eliminated && onAnswer(id)}
+            disabled={(!canAnswer && !isRevealed) || eliminated}
             className={[
-              'relative flex flex-col items-center justify-center py-3 rounded-xl border-2 transition-all select-none',
+              'milled-button relative flex flex-col items-center justify-center py-3 rounded-xl border transition-all select-none',
               isCorrect
-                ? 'border-good bg-good/15 shadow-[0_0_20px_rgba(34,197,94,0.2)] text-good'
+                ? 'border-secondary bg-secondary/15 shadow-[0_0_20px_rgba(78,222,163,0.3)] text-secondary'
+                : eliminated
+                ? 'border-outline-variant/30 bg-surface-container-low text-on-surface-variant/40 line-through cursor-not-allowed opacity-40'
                 : canAnswer
-                ? 'border-ink-600 bg-ink-700/80 hover:border-accent/60 hover:bg-ink-700 text-slate-200 cursor-pointer active:scale-95'
-                : 'border-ink-700 bg-ink-800/50 text-slate-600 cursor-default',
+                ? 'border-transparent bg-surface-container hover:border-primary/50 text-on-surface cursor-pointer active:scale-95'
+                : 'border-transparent bg-surface-container/50 text-on-surface-variant/50 cursor-default',
             ].join(' ')}
           >
             {/* Keyboard shortcut */}

@@ -20,12 +20,12 @@ export function FretboardReveal({ question, correct }: Props) {
         markers={[
           {
             position: question.root,
-            color: '#22d3ee',
+            color: '#00daf3',
             label: question.root.noteName.replace(/\d+$/, ''),
           },
           {
             position: question.target,
-            color: correct ? '#22c55e' : '#ef4444',
+            color: correct ? '#4edea3' : '#ffb4ab',
             label: question.target.noteName.replace(/\d+$/, ''),
           },
         ]}

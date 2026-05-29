@@ -48,7 +48,11 @@ function uid(): string {
 export function useTrainer() {
   const settings = useSettings();
   const stats = useStats();
-  const { phase, question, setPhase, setQuestion, setLastCorrect, setUsedReplay, usedReplay } = useSession();
+  const {
+    phase, question, setPhase, setQuestion,
+    setLastCorrect, setUsedReplay, usedReplay,
+    setUsedHint, usedHint, setEliminated,
+  } = useSession();
   const pickerRef = useRef(makeBagPicker());
 
   const nextQuestion = useCallback(async () => {
@@ -72,15 +76,28 @@ export function useTrainer() {
     setPhase('awaiting');
   }, [settings, setQuestion, setPhase, setUsedReplay]);
 
-  const replay = useCallback(async () => {
+  const replay = useCallback(async (rate = 1) => {
     const current = useSession.getState().question;
     if (!current) return;
     setUsedReplay(true);
     setPhase('playing');
     const plan = planFromSettings(current.root.midi, current.target.midi, settings);
-    await playPlan(plan, settings.soundPack);
+    await playPlan(plan, settings.soundPack, rate);
     setPhase('awaiting');
   }, [settings, setPhase, setUsedReplay]);
+
+  const replaySlow = useCallback(() => replay(0.5), [replay]);
+
+  // Hint: eliminate ~half of the wrong answers, always keeping the correct one.
+  const useHintNow = useCallback(() => {
+    const current = useSession.getState().question;
+    if (!current || useSession.getState().phase !== 'awaiting') return;
+    const wrong = settings.enabledIntervals.filter((id) => id !== current.intervalId);
+    if (wrong.length <= 1) return;
+    const toEliminate = shuffle(wrong).slice(0, Math.ceil(wrong.length / 2));
+    setEliminated(toEliminate);
+    setUsedHint(true);
+  }, [settings.enabledIntervals, setEliminated, setUsedHint]);
 
   const answer = useCallback(
     (guessedId: IntervalId) => {
@@ -88,35 +105,27 @@ export function useTrainer() {
       const correct = guessedId === question.intervalId;
       setLastCorrect(correct);
       setPhase('revealed');
-      stats.recordAnswer({
+      const result = {
         questionId: question.id,
         intervalId: question.intervalId,
         guessedId,
         correct,
         usedReplay,
+        usedHint,
         answeredAt: Date.now(),
-      });
+      };
+      stats.recordAnswer(result);
       if (settings.mode === 'progressive') {
-        const next = nextProgressiveUnlock(settings.enabledIntervals, [
-          ...stats.results,
-          {
-            questionId: question.id,
-            intervalId: question.intervalId,
-            guessedId,
-            correct,
-            usedReplay,
-            answeredAt: Date.now(),
-          },
-        ]);
+        const next = nextProgressiveUnlock(settings.enabledIntervals, [...stats.results, result]);
         if (next) {
           settings.setIntervals([...settings.enabledIntervals, next]);
         }
       }
     },
-    [question, phase, usedReplay, settings, stats, setLastCorrect, setPhase],
+    [question, phase, usedReplay, usedHint, settings, stats, setLastCorrect, setPhase],
   );
 
   const intervalName = question ? INTERVAL_BY_ID[question.intervalId].name : '';
 
-  return { phase, question, nextQuestion, replay, answer, intervalName };
+  return { phase, question, nextQuestion, replay, replaySlow, useHint: useHintNow, answer, intervalName };
 }

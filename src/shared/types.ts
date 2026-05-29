@@ -34,6 +34,16 @@ export interface AnswerResult {
   guessedId: IntervalId;
   correct: boolean;
   usedReplay: boolean;
+  usedHint: boolean;
+  answeredAt: number;
+}
+
+export type ChordQuality = 'maj' | 'min' | 'dim' | 'aug' | 'dom7' | 'maj7' | 'min7';
+
+export interface ChordResult {
+  quality: ChordQuality;
+  guessed: ChordQuality;
+  correct: boolean;
   answeredAt: number;
 }
 
@@ -50,12 +60,24 @@ export interface Settings {
   gapMaxMs: number;
   soundPack: 'acoustic' | 'electric';
   allowDescending: boolean;
+  playbackMode: 'melodic' | 'harmonic';
+  enableReferenceTone: boolean;
+  referencePitch: number;
+  showNotesBeforeAnswer: boolean;
+  dailyGoalReps: number;
+  enabledChords: ChordQuality[];
+  melodyLength: number;
 }
 
 export interface DailyAggregate {
   date: string;
   total: number;
   correct: number;
+}
+
+export interface UnlockedAchievement {
+  id: string;
+  at: number;
 }
 
 export interface StatsState {
@@ -66,4 +88,8 @@ export interface StatsState {
   totalSessions: number;
   practiceMs: number;
   daily: DailyAggregate[];
+  totalXp: number;
+  unlockedAchievements: UnlockedAchievement[];
+  bestTimedScore: number;
+  chordResults: ChordResult[];
 }
