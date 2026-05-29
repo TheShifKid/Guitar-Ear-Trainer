@@ -25,9 +25,9 @@ export function StatsScreen() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <header className="flex justify-between items-end px-8 py-8 sticky top-0 z-10 bg-surface-container-low border-b border-outline-variant/30">
+      <header className="flex justify-between items-end px-4 md:px-8 py-6 md:py-8 sticky top-0 z-10 bg-surface-container-low border-b border-outline-variant/30">
         <div>
-          <h1 className="text-4xl font-bold tracking-tighter text-primary-fixed-dim leading-none">Progress Overview</h1>
+          <h1 className="text-2xl md:text-4xl font-bold tracking-tighter text-primary-fixed-dim leading-none">Progress Overview</h1>
           <p className="text-on-surface-variant mt-2 text-lg">Tracking your evolution from Novice to Virtuoso.</p>
         </div>
         <div className="flex flex-col items-end">
@@ -39,7 +39,7 @@ export function StatsScreen() {
         </div>
       </header>
 
-      <div className="max-w-[1200px] mx-auto px-8 py-6 grid grid-cols-12 gap-6">
+      <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-6 grid grid-cols-12 gap-4 md:gap-6">
         {/* Accuracy chart */}
         <section className="col-span-12 lg:col-span-8 surface-card rounded-2xl p-6">
           <div className="flex justify-between items-center mb-6">

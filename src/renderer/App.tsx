@@ -24,8 +24,8 @@ export default function App() {
 
   return (
     <div className="h-full flex text-on-background">
-      {/* ── Pro Studio sidebar ── */}
-      <nav className="w-60 shrink-0 h-full flex flex-col border-r border-outline-variant bg-surface-container-lowest">
+      {/* ── Pro Studio sidebar (desktop only) ── */}
+      <nav className="hidden md:flex w-60 shrink-0 h-full flex-col border-r border-outline-variant bg-surface-container-lowest">
         <div className="p-6">
           <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-secondary block mb-1">Pro Studio</span>
           <h1 className="text-2xl font-bold tracking-tighter text-primary-fixed-dim">FretFlow Pro</h1>
@@ -68,15 +68,46 @@ export default function App() {
       </nav>
 
       {/* ── Main content ── */}
-      <main className="flex-1 h-full overflow-hidden">
-        {tab === 'trainer' && <TrainerScreen />}
-        {tab === 'chords' && <ChordScreen />}
-        {tab === 'progressions' && <ProgressionScreen />}
-        {tab === 'melodic' && <MelodicScreen />}
-        {tab === 'challenge' && <ChallengeScreen />}
-        {tab === 'stats' && <StatsScreen />}
-        {tab === 'settings' && <SettingsScreen />}
-      </main>
+      <div className="flex-1 h-full flex flex-col overflow-hidden">
+        {/* Mobile top bar */}
+        <header className="md:hidden shrink-0 flex items-center justify-between px-4 py-3 border-b border-outline-variant bg-surface-container-lowest">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-secondary">Pro Studio</span>
+            <h1 className="text-lg font-bold tracking-tighter text-primary-fixed-dim">FretFlow Pro</h1>
+          </div>
+          <span className="material-symbols-outlined text-secondary">{NAV.find((n) => n.id === tab)?.icon}</span>
+        </header>
+
+        <main className="flex-1 overflow-hidden">
+          {tab === 'trainer' && <TrainerScreen />}
+          {tab === 'chords' && <ChordScreen />}
+          {tab === 'progressions' && <ProgressionScreen />}
+          {tab === 'melodic' && <MelodicScreen />}
+          {tab === 'challenge' && <ChallengeScreen />}
+          {tab === 'stats' && <StatsScreen />}
+          {tab === 'settings' && <SettingsScreen />}
+        </main>
+
+        {/* Mobile bottom tab bar */}
+        <nav className="md:hidden shrink-0 flex border-t border-outline-variant bg-surface-container-lowest pb-[env(safe-area-inset-bottom)] overflow-x-auto">
+          {NAV.map((item) => {
+            const active = item.id === tab;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setTab(item.id)}
+                className={[
+                  'flex-1 min-w-[58px] flex flex-col items-center gap-0.5 py-2 transition-colors',
+                  active ? 'text-primary' : 'text-on-surface-variant',
+                ].join(' ')}
+              >
+                <span className={['material-symbols-outlined text-[22px]', active ? 'fill' : ''].join(' ')}>{item.icon}</span>
+                <span className="text-[9px] font-medium leading-none">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
     </div>
   );
 }

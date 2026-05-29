@@ -20,9 +20,9 @@ export function SettingsScreen() {
   return (
     <div className="h-full overflow-y-auto">
       {/* Header bar */}
-      <header className="flex justify-between items-center px-8 py-8 sticky top-0 z-10 bg-surface-container-low border-b border-outline-variant/30">
+      <header className="flex justify-between items-center px-4 md:px-8 py-6 md:py-8 sticky top-0 z-10 bg-surface-container-low border-b border-outline-variant/30">
         <div>
-          <h2 className="text-4xl font-bold tracking-tighter text-primary-fixed-dim">Gear Setup</h2>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-primary-fixed-dim">Gear Setup</h2>
           <p className="text-on-surface-variant">Calibrate your practice session</p>
         </div>
         <div className="flex gap-3 text-on-surface-variant">
@@ -31,7 +31,7 @@ export function SettingsScreen() {
         </div>
       </header>
 
-      <div className="max-w-[1200px] mx-auto px-8 py-6">
+      <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* ── Left column ── */}
           <div className="lg:col-span-7 space-y-6">
