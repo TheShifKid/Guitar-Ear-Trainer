@@ -100,7 +100,7 @@ export function TrainerScreen() {
               </span>
             </button>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap justify-center gap-3">
               <ActionBtn icon="replay" label="Replay" onClick={() => void replay()} disabled={!question || phase === 'playing'} />
               <button
                 onClick={() => void replaySlow()}
