@@ -69,7 +69,7 @@ export function TrainerScreen() {
         </section>
 
         {/* ── Fretboard visualizer ── */}
-        <section className="relative bg-surface-container-lowest rounded-xl border border-outline-variant/50 p-3 shadow-2xl">
+        <section className="surface-card relative rounded-2xl p-4">
           {question ? (
             <Fretboard minFret={fbMin} maxFret={fbMax} markers={markers} height={240} />
           ) : (
@@ -132,7 +132,7 @@ export function TrainerScreen() {
         </section>
 
         {/* ── Session performance ── */}
-        <section className="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/30">
+        <section className="surface-card rounded-2xl p-6">
           <h3 className="font-mono text-[11px] uppercase tracking-[0.15em] text-on-surface-variant mb-6">Session Performance</h3>
           <SessionBars daily={stats.daily} />
         </section>
@@ -145,13 +145,15 @@ function HudCard({
   label, value, icon, tone,
 }: { label: string; value: number | string; icon: string; tone: 'secondary' | 'primary' | 'primaryLight' }) {
   const color = tone === 'secondary' ? 'text-secondary' : tone === 'primary' ? 'text-primary-fixed-dim' : 'text-primary';
+  const glow = tone === 'secondary' ? 'rgba(78,222,163,0.18)' : 'rgba(0,218,243,0.18)';
   return (
-    <div className="relative bg-surface-container rounded-xl p-6 flex items-center justify-between border border-outline-variant/30 overflow-hidden">
-      <div>
+    <div className="surface-card rounded-2xl p-6 flex items-center justify-between overflow-hidden">
+      <div className="relative z-10">
         <p className={['font-mono text-[11px] uppercase tracking-[0.15em]', color].join(' ')}>{label}</p>
-        <p className={['text-5xl font-bold leading-tight mt-1', color].join(' ')}>{value}</p>
+        <p className={['text-5xl font-bold leading-tight mt-1 tabular-nums', color].join(' ')}>{value}</p>
       </div>
-      <span className={['material-symbols-outlined text-5xl opacity-20', color].join(' ')}>{icon}</span>
+      <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full blur-2xl" style={{ background: glow }} />
+      <span className={['material-symbols-outlined text-6xl opacity-25 relative z-10', color].join(' ')}>{icon}</span>
     </div>
   );
 }

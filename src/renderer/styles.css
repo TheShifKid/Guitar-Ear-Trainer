@@ -7,7 +7,13 @@ body {
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
   font-family: 'Inter', system-ui, sans-serif;
-  background: #131313;
+  color: #e5e7e9;
+  /* Ambient studio backdrop: subtle cyan glow top-left, deep obsidian base */
+  background:
+    radial-gradient(1200px 700px at 12% -10%, rgba(0, 218, 243, 0.07), transparent 60%),
+    radial-gradient(900px 600px at 100% 110%, rgba(78, 222, 163, 0.05), transparent 55%),
+    #0f1011;
+  background-attachment: fixed;
 }
 
 button:focus-visible { outline: 2px solid theme('colors.accent.DEFAULT'); outline-offset: 2px; }
@@ -49,7 +55,24 @@ button:focus-visible { outline: 2px solid theme('colors.accent.DEFAULT'); outlin
 }
 
 /* Cyan glow for active elements */
-.active-glow { box-shadow: 0 0 15px rgba(0, 218, 243, 0.4); }
+.active-glow {
+  box-shadow: 0 0 0 1px rgba(0, 218, 243, 0.35), 0 0 24px rgba(0, 218, 243, 0.45), 0 0 60px rgba(0, 218, 243, 0.18);
+}
+
+/* Premium surface card: top highlight, layered depth shadow, hover lift */
+.surface-card {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0) 120px),
+    rgba(28, 27, 27, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 10px 30px -12px rgba(0, 0, 0, 0.7);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.surface-card:hover {
+  border-color: rgba(0, 218, 243, 0.18);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 14px 40px -12px rgba(0, 0, 0, 0.75);
+}
 
 .string-shadow { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
 .fretboard-gradient { background: linear-gradient(to right, #2a221b, #1a1512); }

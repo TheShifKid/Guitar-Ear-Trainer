@@ -23,7 +23,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('trainer');
 
   return (
-    <div className="h-full flex bg-background text-on-background">
+    <div className="h-full flex text-on-background">
       {/* ── Pro Studio sidebar ── */}
       <nav className="w-60 shrink-0 h-full flex flex-col border-r border-outline-variant bg-surface-container-lowest">
         <div className="p-6">

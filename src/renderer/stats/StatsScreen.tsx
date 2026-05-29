@@ -41,7 +41,7 @@ export function StatsScreen() {
 
       <div className="max-w-[1200px] mx-auto px-8 py-6 grid grid-cols-12 gap-6">
         {/* Accuracy chart */}
-        <section className="col-span-12 lg:col-span-8 bg-surface-container-low rounded-xl p-6 border border-outline-variant/30">
+        <section className="col-span-12 lg:col-span-8 surface-card rounded-2xl p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h3 className="text-2xl font-semibold text-on-surface">Accuracy Over Time</h3>
@@ -60,7 +60,7 @@ export function StatsScreen() {
         </section>
 
         {/* Mastery levels */}
-        <section className="col-span-12 lg:col-span-4 bg-surface-container-low rounded-xl p-6 border border-outline-variant/30">
+        <section className="col-span-12 lg:col-span-4 surface-card rounded-2xl p-6">
           <h3 className="text-2xl font-semibold text-on-surface">Mastery Levels</h3>
           <p className="font-mono text-[11px] uppercase tracking-wider text-on-surface-variant mb-5">Rolling 20-rep accuracy</p>
           <div className="flex flex-col gap-4">
@@ -86,14 +86,14 @@ export function StatsScreen() {
         </section>
 
         {/* Confusion matrix */}
-        <section className="col-span-12 lg:col-span-7 bg-surface-container-low rounded-xl p-6 border border-outline-variant/30">
+        <section className="col-span-12 lg:col-span-7 surface-card rounded-2xl p-6">
           <h3 className="text-2xl font-semibold text-on-surface">Confusion Matrix</h3>
           <p className="font-mono text-[11px] uppercase tracking-wider text-on-surface-variant mb-5">Identifying frequent mistakes</p>
           <ConfusionMatrix results={stats.results} intervals={focus} />
         </section>
 
         {/* Recent sessions */}
-        <section className="col-span-12 lg:col-span-5 bg-surface-container-low rounded-xl p-6 border border-outline-variant/30 flex flex-col">
+        <section className="col-span-12 lg:col-span-5 surface-card rounded-2xl p-6 flex flex-col">
           <div className="flex justify-between items-center mb-5">
             <div>
               <h3 className="text-2xl font-semibold text-on-surface">Recent Activity</h3>
@@ -143,7 +143,7 @@ export function StatsScreen() {
         </section>
 
         {/* Level + achievements (extra) */}
-        <section className="col-span-12 bg-surface-container-low rounded-xl p-6 border border-outline-variant/30">
+        <section className="col-span-12 surface-card rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-primary-fixed-dim/15 border-2 border-primary-fixed-dim flex items-center justify-center text-primary-fixed-dim font-bold">{lp.level}</div>
