@@ -53,14 +53,17 @@ export default function App() {
           })}
         </div>
 
-        <div className="p-6 space-y-4">
-          <div className="bg-surface-container-low p-4 rounded-lg border border-outline-variant flex flex-col gap-1">
-            <span className="font-mono text-[10px] tracking-wider text-secondary">ACTIVE SESSION</span>
-            <p className="text-sm text-on-surface">Ear Training Active</p>
+        <div className="p-6">
+          <div className="surface-card rounded-xl p-4 flex items-center gap-3">
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-secondary opacity-60 animate-ping" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-secondary" />
+            </span>
+            <div className="flex flex-col">
+              <span className="font-mono text-[10px] tracking-wider text-secondary">ACTIVE SESSION</span>
+              <p className="text-sm text-on-surface">Ear Training</p>
+            </div>
           </div>
-          <button className="w-full py-3.5 px-4 bg-primary-container text-on-primary-container font-semibold rounded-lg active:scale-95 transition-transform milled-button">
-            Upgrade Pro
-          </button>
         </div>
       </nav>
 
