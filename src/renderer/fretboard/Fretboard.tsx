@@ -87,7 +87,7 @@ export function Fretboard({ minFret = 0, maxFret = 12, markers = [], height = 22
             y1={padT - 4}
             x2={x}
             y2={padT + innerH + 4}
-            stroke="#5e4a32"
+            stroke="#8a9296"
             strokeWidth={f === -1 ? 0 : 1.5}
           />
         );
@@ -146,6 +146,7 @@ export function Fretboard({ minFret = 0, maxFret = 12, markers = [], height = 22
         const label = m.label ?? midiToPitchClass(fretToMidi(m.position.string, m.position.fret));
         return (
           <g key={`m-${i}`}>
+            <circle cx={cx} cy={cy} r={22} fill={m.color} opacity={0.22} />
             <circle cx={cx} cy={cy} r={14} fill={m.color} stroke="#0b0d10" strokeWidth={2} />
             <text
               x={cx}

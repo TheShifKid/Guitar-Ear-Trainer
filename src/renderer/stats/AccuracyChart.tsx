@@ -25,7 +25,7 @@ export function AccuracyChart({ daily, days }: Props) {
         <XAxis dataKey="date" stroke="#7a8290" fontSize={11} />
         <YAxis stroke="#7a8290" fontSize={11} domain={[0, 100]} unit="%" />
         <Tooltip contentStyle={{ background: '#13171c', border: '1px solid #2a313c' }} />
-        <Line type="monotone" dataKey="accuracy" stroke="#22d3ee" strokeWidth={2} dot={{ r: 3 }} />
+        <Line type="monotone" dataKey="accuracy" stroke="#00daf3" strokeWidth={2} dot={{ r: 3, fill: '#00daf3' }} />
       </LineChart>
     </ResponsiveContainer>
   );

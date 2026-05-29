@@ -1,244 +1,195 @@
 import { useState } from 'react';
-import { useStats, accuracyForInterval, computeDayStreak, masteredIntervalCount } from '@renderer/store/statsStore';
+import { useStats, accuracyForInterval, buildConfusionMatrix, computeDayStreak } from '@renderer/store/statsStore';
 import { useSettings } from '@renderer/store/settingsStore';
 import { INTERVAL_BY_ID, INTERVALS } from '@renderer/music/intervals';
 import { ConfusionMatrix } from './ConfusionMatrix';
 import { AccuracyChart } from './AccuracyChart';
 import { levelProgress } from '@renderer/progress/xp';
 import { ACHIEVEMENTS } from '@renderer/progress/achievements';
-import { CHORDS } from '@renderer/music/chords';
+import type { AnswerResult, IntervalId } from '@shared/types';
 
 type Window = 7 | 30 | 0;
 
 export function StatsScreen() {
   const stats = useStats();
-  const { enabledIntervals, dailyGoalReps } = useSettings();
-  const [w, setW] = useState<Window>(7);
+  const { enabledIntervals } = useSettings();
+  const [w, setW] = useState<Window>(30);
 
-  const focusIntervals = enabledIntervals.length > 0 ? enabledIntervals : INTERVALS.map((i) => i.id);
-  const minutes = Math.round(stats.practiceMs / 60000);
-
+  const focus = enabledIntervals.length > 0 ? enabledIntervals : INTERVALS.map((i) => i.id);
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const todayReps = stats.daily.find((d) => d.date === todayKey)?.total ?? 0;
   const lp = levelProgress(stats.totalXp);
   const dayStreak = computeDayStreak(stats.daily);
-  const mastered = masteredIntervalCount(stats.results);
-  const today = new Date();
-  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  const todayReps = stats.daily.find((d) => d.date === todayKey)?.total ?? 0;
-  const goalPct = dailyGoalReps > 0 ? Math.min(1, todayReps / dailyGoalReps) : 0;
-  const unlockedIds = new Set(stats.unlockedAchievements.map((a) => a.id));
+  const advice = buildAdvice(focus, stats.results);
+  const unlocked = stats.unlockedAchievements.length;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6 overflow-y-auto h-full">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Stats</h1>
-        <button
-          onClick={() => {
-            if (confirm('Reset all stats? This cannot be undone.')) stats.reset();
-          }}
-          className="text-xs px-2 py-1 rounded border border-ink-600 text-slate-400 hover:text-bad"
-        >
-          Reset stats
-        </button>
+    <div className="h-full overflow-y-auto">
+      <header className="flex justify-between items-end px-8 py-8 sticky top-0 z-10 bg-surface-container-low border-b border-outline-variant/30">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tighter text-primary-fixed-dim leading-none">Progress Overview</h1>
+          <p className="text-on-surface-variant mt-2 text-lg">Tracking your evolution from Novice to Virtuoso.</p>
+        </div>
+        <div className="flex flex-col items-end">
+          <span className="font-mono text-[11px] tracking-wider text-secondary">TOTAL REPS</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-4xl font-bold text-on-surface">{stats.totalReps.toLocaleString()}</span>
+            {todayReps > 0 && <span className="font-mono text-xs text-secondary-container">+{todayReps} today</span>}
+          </div>
+        </div>
       </header>
 
-      {/* Level + XP hero */}
-      <section className="rounded-xl border border-ink-600 bg-gradient-to-br from-ink-700 to-ink-800 p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-accent/15 border-2 border-accent flex items-center justify-center">
-              <span className="text-accent font-bold text-lg">{lp.level}</span>
-            </div>
+      <div className="max-w-[1200px] mx-auto px-8 py-6 grid grid-cols-12 gap-6">
+        {/* Accuracy chart */}
+        <section className="col-span-12 lg:col-span-8 bg-surface-container-low rounded-xl p-6 border border-outline-variant/30">
+          <div className="flex justify-between items-center mb-6">
             <div>
-              <div className="text-sm font-semibold text-slate-100">Level {lp.level}</div>
-              <div className="text-xs text-slate-500">{stats.totalXp} XP total</div>
+              <h3 className="text-2xl font-semibold text-on-surface">Accuracy Over Time</h3>
+              <p className="font-mono text-[11px] uppercase tracking-wider text-on-surface-variant">Consolidated across all modules</p>
+            </div>
+            <div className="flex bg-surface-container-highest rounded-full p-1 border border-outline-variant/20">
+              {([7, 30, 0] as Window[]).map((d) => (
+                <button key={d} onClick={() => setW(d)}
+                  className={['px-4 py-1 rounded-full font-mono text-[10px]', w === d ? 'bg-primary text-on-primary-container' : 'text-on-surface-variant hover:text-on-surface'].join(' ')}>
+                  {d === 0 ? 'ALL' : `${d}D`}
+                </button>
+              ))}
             </div>
           </div>
-          <div className="text-right text-xs text-slate-500">
-            {lp.span - lp.into} XP to level {lp.level + 1}
-          </div>
-        </div>
-        <div className="h-2 rounded-full bg-ink-900 overflow-hidden">
-          <div className="h-full bg-accent transition-all" style={{ width: `${Math.round(lp.pct * 100)}%` }} />
-        </div>
-      </section>
+          <AccuracyChart daily={stats.daily} days={w === 0 ? stats.daily.length : w} />
+        </section>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Stat label="Day streak" value={dayStreak} accent />
-        <Stat label="Best streak" value={stats.bestStreak} />
-        <Stat label="Total reps" value={stats.totalReps} />
-        <Stat label="Timed best" value={stats.bestTimedScore} />
-      </div>
-
-      {/* Daily goal */}
-      <section className="rounded-xl border border-ink-600 bg-ink-800 p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm uppercase tracking-wide text-slate-400">Today's goal</h2>
-          <span className="text-xs text-slate-500">{todayReps} / {dailyGoalReps} reps</span>
-        </div>
-        <div className="h-3 rounded-full bg-ink-900 overflow-hidden">
-          <div
-            className={`h-full transition-all ${goalPct >= 1 ? 'bg-good' : 'bg-accent'}`}
-            style={{ width: `${Math.round(goalPct * 100)}%` }}
-          />
-        </div>
-        {goalPct >= 1 && <p className="text-xs text-good mt-2">✓ Goal hit today — nice.</p>}
-      </section>
-
-      <section className="rounded-xl border border-ink-600 bg-ink-800 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm uppercase tracking-wide text-slate-400">Daily accuracy</h2>
-          <div className="flex gap-1 text-xs">
-            {([7, 30, 0] as Window[]).map((d) => (
-              <button
-                key={d}
-                onClick={() => setW(d)}
-                className={`px-2 py-1 rounded ${w === d ? 'bg-accent/20 text-accent' : 'text-slate-400'}`}
-              >
-                {d === 0 ? 'All' : `${d}d`}
-              </button>
-            ))}
-          </div>
-        </div>
-        <AccuracyChart daily={stats.daily} days={w === 0 ? stats.daily.length : w} />
-      </section>
-
-      <section className="rounded-xl border border-ink-600 bg-ink-800 p-4">
-        <h2 className="text-sm uppercase tracking-wide text-slate-400 mb-3">Per-interval accuracy</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {focusIntervals.map((id) => {
-            const all = accuracyForInterval(stats.results, id);
-            const recent = accuracyForInterval(stats.results, id, 20);
-            const reps = stats.results.filter((r) => r.intervalId === id).length;
-            const mastery = reps >= 20 && recent >= 0.85;
-            return (
-              <div key={id} className="p-3 rounded-md border border-ink-700 bg-ink-700/50">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-sm">{INTERVAL_BY_ID[id].short}</span>
-                  {mastery && (
-                    <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-good/20 text-good">
-                      mastered
-                    </span>
-                  )}
-                </div>
-                <div className="text-xs text-slate-400">{INTERVAL_BY_ID[id].name}</div>
-                <div className="mt-1 text-xs font-mono">
-                  <span>all: {pct(all)}</span>
-                  <span className="ml-3">last 20: {pct(recent)}</span>
-                  <span className="ml-3 text-slate-500">{reps} reps</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-ink-600 bg-ink-800 p-4">
-        <h2 className="text-sm uppercase tracking-wide text-slate-400 mb-3">Confusion matrix</h2>
-        <ConfusionMatrix results={stats.results} intervals={focusIntervals} />
-      </section>
-
-      {stats.chordResults.length > 0 && (
-        <section className="rounded-xl border border-ink-600 bg-ink-800 p-4">
-          <h2 className="text-sm uppercase tracking-wide text-slate-400 mb-3">Chord accuracy</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {CHORDS.map((c) => {
-              const rs = stats.chordResults.filter((r) => r.quality === c.id);
-              if (rs.length === 0) return null;
-              const acc = rs.filter((r) => r.correct).length / rs.length;
+        {/* Mastery levels */}
+        <section className="col-span-12 lg:col-span-4 bg-surface-container-low rounded-xl p-6 border border-outline-variant/30">
+          <h3 className="text-2xl font-semibold text-on-surface">Mastery Levels</h3>
+          <p className="font-mono text-[11px] uppercase tracking-wider text-on-surface-variant mb-5">Rolling 20-rep accuracy</p>
+          <div className="flex flex-col gap-4">
+            {focus.slice(0, 6).map((id) => {
+              const acc = accuracyForInterval(stats.results, id, 20);
+              const reps = stats.results.filter((r) => r.intervalId === id).length;
+              const pctv = Math.round(acc * 100);
+              const color = reps === 0 ? 'text-outline' : pctv >= 85 ? 'text-secondary' : pctv >= 70 ? 'text-primary-fixed-dim' : pctv >= 50 ? 'text-on-tertiary-container' : 'text-on-surface-variant';
+              const bar = reps === 0 ? 'bg-outline/40' : pctv >= 85 ? 'bg-secondary' : pctv >= 70 ? 'bg-primary-fixed-dim' : pctv >= 50 ? 'bg-on-tertiary-container' : 'bg-outline';
               return (
-                <div key={c.id} className="p-3 rounded-md border border-ink-700 bg-ink-700/50">
-                  <div className="font-mono text-sm text-slate-200">{c.short}</div>
-                  <div className="text-xs text-slate-400">{c.name}</div>
-                  <div className="mt-1 text-xs font-mono">{pct(acc)} · {rs.length} reps</div>
+                <div key={id} className="flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-on-surface">{INTERVAL_BY_ID[id].name}</span>
+                    <span className={['font-mono', color].join(' ')}>{reps === 0 ? '–' : `${pctv}%`}</span>
+                  </div>
+                  <div className="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+                    <div className={['h-full rounded-full', bar, pctv >= 85 ? 'shadow-[0_0_15px_rgba(78,222,163,0.4)]' : ''].join(' ')} style={{ width: `${reps === 0 ? 0 : pctv}%` }} />
+                  </div>
                 </div>
               );
             })}
           </div>
         </section>
-      )}
 
-      {/* Calendar heatmap (last ~16 weeks) */}
-      <section className="rounded-xl border border-ink-600 bg-ink-800 p-4">
-        <h2 className="text-sm uppercase tracking-wide text-slate-400 mb-3">Practice calendar</h2>
-        <CalendarHeatmap daily={stats.daily} />
-      </section>
+        {/* Confusion matrix */}
+        <section className="col-span-12 lg:col-span-7 bg-surface-container-low rounded-xl p-6 border border-outline-variant/30">
+          <h3 className="text-2xl font-semibold text-on-surface">Confusion Matrix</h3>
+          <p className="font-mono text-[11px] uppercase tracking-wider text-on-surface-variant mb-5">Identifying frequent mistakes</p>
+          <ConfusionMatrix results={stats.results} intervals={focus} />
+        </section>
 
-      {/* Achievements */}
-      <section className="rounded-xl border border-ink-600 bg-ink-800 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm uppercase tracking-wide text-slate-400">Achievements</h2>
-          <span className="text-xs text-slate-500">{unlockedIds.size} / {ACHIEVEMENTS.length}</span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-          {ACHIEVEMENTS.map((a) => {
-            const got = unlockedIds.has(a.id);
-            return (
-              <div
-                key={a.id}
-                className={[
-                  'flex items-center gap-2 p-2.5 rounded-lg border',
-                  got ? 'border-accent/40 bg-accent/5' : 'border-ink-700 bg-ink-900/40 opacity-50',
-                ].join(' ')}
-                title={a.description}
-              >
-                <span className={['text-xl', got ? '' : 'grayscale'].join(' ')}>{a.icon}</span>
-                <div className="min-w-0">
-                  <div className={['text-xs font-semibold truncate', got ? 'text-slate-200' : 'text-slate-500'].join(' ')}>{a.name}</div>
-                  <div className="text-[10px] text-slate-500 truncate">{a.description}</div>
+        {/* Recent sessions */}
+        <section className="col-span-12 lg:col-span-5 bg-surface-container-low rounded-xl p-6 border border-outline-variant/30 flex flex-col">
+          <div className="flex justify-between items-center mb-5">
+            <div>
+              <h3 className="text-2xl font-semibold text-on-surface">Recent Activity</h3>
+              <p className="font-mono text-[11px] uppercase tracking-wider text-on-surface-variant">Last practiced days</p>
+            </div>
+            <span className="material-symbols-outlined text-primary-fixed-dim">history</span>
+          </div>
+          <div className="flex flex-col gap-3 flex-grow">
+            {stats.daily.slice(-4).reverse().map((d, i) => {
+              const acc = d.total ? Math.round((d.correct / d.total) * 100) : 0;
+              const color = acc >= 90 ? 'text-secondary' : acc >= 75 ? 'text-primary-fixed-dim' : 'text-on-surface';
+              return (
+                <div key={d.date} className="bg-surface-container-highest p-4 rounded-lg flex items-center justify-between border border-transparent hover:border-outline-variant transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded bg-primary-container/20 flex items-center justify-center text-primary-fixed-dim">
+                      <span className="material-symbols-outlined">{['music_note', 'piano', 'album', 'graphic_eq'][i % 4]}</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-on-surface">{d.date.slice(5)}</h4>
+                      <p className="font-mono text-[10px] uppercase text-on-surface-variant">{d.total} reps</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={['font-bold', color].join(' ')}>{acc}%</div>
+                    <div className="font-mono text-[10px] text-on-surface-variant">ACCURACY</div>
+                  </div>
                 </div>
+              );
+            })}
+            {stats.daily.length === 0 && <p className="text-on-surface-variant/50 text-sm">No activity yet — start practicing.</p>}
+          </div>
+        </section>
+
+        {/* Practice advice */}
+        <section className="col-span-12 bg-gradient-to-r from-surface-container-low to-surface-container-high rounded-xl p-8 border border-outline-variant/30 relative overflow-hidden">
+          <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-primary-fixed-dim/5 rounded-full blur-3xl" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="max-w-xl text-center md:text-left">
+              <h3 className="text-2xl font-bold text-on-surface mb-2">Practice Advice</h3>
+              <p className="text-lg text-on-surface-variant">{advice}</p>
+            </div>
+            <div className="flex flex-col items-center gap-1 shrink-0">
+              <span className="font-mono text-[11px] text-secondary">DAY STREAK</span>
+              <span className="text-5xl font-bold text-secondary">{dayStreak}</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Level + achievements (extra) */}
+        <section className="col-span-12 bg-surface-container-low rounded-xl p-6 border border-outline-variant/30">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-primary-fixed-dim/15 border-2 border-primary-fixed-dim flex items-center justify-center text-primary-fixed-dim font-bold">{lp.level}</div>
+              <div>
+                <div className="font-semibold text-on-surface">Level {lp.level}</div>
+                <div className="font-mono text-xs text-on-surface-variant">{stats.totalXp} XP · {unlocked}/{ACHIEVEMENTS.length} achievements</div>
               </div>
-            );
-          })}
-        </div>
-      </section>
+            </div>
+            <div className="w-1/2 max-w-xs">
+              <div className="h-2 rounded-full bg-surface-container-highest overflow-hidden">
+                <div className="h-full bg-primary-fixed-dim" style={{ width: `${Math.round(lp.pct * 100)}%` }} />
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {ACHIEVEMENTS.map((a) => {
+              const got = stats.unlockedAchievements.some((u) => u.id === a.id);
+              return (
+                <span key={a.id} title={`${a.name} — ${a.description}`}
+                  className={['text-xl w-9 h-9 flex items-center justify-center rounded-lg border', got ? 'border-secondary/40 bg-secondary/5' : 'border-outline-variant/30 opacity-30 grayscale'].join(' ')}>
+                  {a.icon}
+                </span>
+              );
+            })}
+          </div>
+        </section>
 
-      <section className="text-xs text-slate-500">
-        Practice time: {minutes} min · {mastered} intervals mastered · stored in browser localStorage.
-      </section>
+        <div className="col-span-12 flex justify-center">
+          <button onClick={() => { if (confirm('Reset all stats? This cannot be undone.')) stats.reset(); }}
+            className="font-mono text-[11px] uppercase tracking-wider text-on-surface-variant hover:text-error transition-colors">
+            Reset all stats
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-function CalendarHeatmap({ daily }: { daily: { date: string; total: number }[] }) {
-  const byDate = new Map(daily.map((d) => [d.date, d.total]));
-  const weeks = 16;
-  const cols: { date: string; total: number }[][] = [];
-  const cursor = new Date();
-  // Move cursor back to the most recent Sunday for clean week columns.
-  cursor.setDate(cursor.getDate() - cursor.getDay());
-  for (let w = weeks - 1; w >= 0; w--) {
-    const col: { date: string; total: number }[] = [];
-    for (let day = 0; day < 7; day++) {
-      const d = new Date(cursor);
-      d.setDate(cursor.getDate() - w * 7 + day);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      col.push({ date: key, total: byDate.get(key) ?? 0 });
-    }
-    cols.push(col);
+// Find the most-confused interval pair and turn it into advice text.
+function buildAdvice(focus: IntervalId[], results: AnswerResult[]): string {
+  if (results.length < 10) return 'Keep practicing — once you have more reps, personalized advice will appear here based on your most common mix-ups.';
+  const m = buildConfusionMatrix(results, focus);
+  let best = { a: '' as IntervalId, b: '' as IntervalId, n: 0 };
+  for (const a of focus) for (const b of focus) {
+    if (a !== b && m[a]?.[b] > best.n) best = { a, b, n: m[a][b] };
   }
-  const level = (n: number) => (n === 0 ? 'bg-ink-700' : n < 10 ? 'bg-accent/30' : n < 25 ? 'bg-accent/60' : 'bg-accent');
-  return (
-    <div className="flex gap-1 overflow-x-auto">
-      {cols.map((col, i) => (
-        <div key={i} className="flex flex-col gap-1">
-          {col.map((cell) => (
-            <div key={cell.date} title={`${cell.date}: ${cell.total} reps`} className={`w-3 h-3 rounded-sm ${level(cell.total)}`} />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function pct(v: number): string {
-  return v === 0 ? '–' : `${Math.round(v * 100)}%`;
-}
-
-function Stat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
-  return (
-    <div className="rounded-lg border border-ink-600 bg-ink-800 p-3">
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`text-2xl font-bold ${accent ? 'text-accent' : 'text-slate-100'}`}>{value}</div>
-    </div>
-  );
+  if (best.n === 0) return 'Your accuracy is clean across the board — try enabling a harder interval to keep growing.';
+  return `You're confusing ${INTERVAL_BY_ID[best.a].name} with ${INTERVAL_BY_ID[best.b].name} most often. Try drilling just those two in isolation for a few minutes to internalize their difference.`;
 }

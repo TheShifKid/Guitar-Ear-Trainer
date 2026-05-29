@@ -1,5 +1,4 @@
-import { useState, type ReactNode } from 'react';
-import { Headphones, BarChart3, SlidersHorizontal, Timer, Music2, ListMusic, AudioWaveform } from 'lucide-react';
+import { useState } from 'react';
 import { TrainerScreen } from './trainer/TrainerScreen';
 import { SettingsScreen } from './settings/SettingsScreen';
 import { StatsScreen } from './stats/StatsScreen';
@@ -10,57 +9,71 @@ import { MelodicScreen } from './melodic/MelodicScreen';
 
 type Tab = 'trainer' | 'chords' | 'progressions' | 'melodic' | 'challenge' | 'stats' | 'settings';
 
+const NAV: { id: Tab; label: string; icon: string }[] = [
+  { id: 'trainer', label: 'Practice', icon: 'school' },
+  { id: 'chords', label: 'Chords', icon: 'piano' },
+  { id: 'progressions', label: 'Progressions', icon: 'queue_music' },
+  { id: 'melodic', label: 'Melody', icon: 'graphic_eq' },
+  { id: 'challenge', label: 'Challenge', icon: 'timer' },
+  { id: 'stats', label: 'Analytics', icon: 'insights' },
+  { id: 'settings', label: 'Gear', icon: 'settings_input_component' },
+];
+
 export default function App() {
   const [tab, setTab] = useState<Tab>('trainer');
 
   return (
-    <div className="h-full flex flex-col bg-ink-900">
-      {/* Top bar */}
-      <header className="shrink-0 h-14 flex items-center justify-between px-5 border-b border-outline-variant/40 bg-surface-container-low">
-        <div className="flex items-baseline gap-2">
-          <span className="text-xl font-bold tracking-tighter text-primary-fixed-dim">FretFlow</span>
-          <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-secondary">Pro</span>
+    <div className="h-full flex bg-background text-on-background">
+      {/* ── Pro Studio sidebar ── */}
+      <nav className="w-60 shrink-0 h-full flex flex-col border-r border-outline-variant bg-surface-container-lowest">
+        <div className="p-6">
+          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-secondary block mb-1">Pro Studio</span>
+          <h1 className="text-2xl font-bold tracking-tighter text-primary-fixed-dim">FretFlow Pro</h1>
+          <p className="text-sm text-on-surface-variant/60">Ear Training Active</p>
         </div>
-        <nav className="flex items-center gap-1">
-          <NavTab id="trainer"      current={tab} label="Intervals"  icon={<Headphones className="w-4 h-4" />}      onClick={setTab} />
-          <NavTab id="chords"       current={tab} label="Chords"     icon={<Music2 className="w-4 h-4" />}          onClick={setTab} />
-          <NavTab id="progressions" current={tab} label="Progress."  icon={<ListMusic className="w-4 h-4" />}       onClick={setTab} />
-          <NavTab id="melodic"      current={tab} label="Melody"     icon={<AudioWaveform className="w-4 h-4" />}   onClick={setTab} />
-          <NavTab id="challenge"    current={tab} label="Challenge"  icon={<Timer className="w-4 h-4" />}           onClick={setTab} />
-          <NavTab id="stats"        current={tab} label="Stats"      icon={<BarChart3 className="w-4 h-4" />}       onClick={setTab} />
-          <NavTab id="settings"     current={tab} label="Settings"   icon={<SlidersHorizontal className="w-4 h-4" />} onClick={setTab} />
-        </nav>
-      </header>
 
-      <main className="flex-1 overflow-hidden">
-        {tab === 'trainer'      && <TrainerScreen />}
-        {tab === 'chords'       && <ChordScreen />}
+        <div className="flex-1 mt-2 space-y-1 overflow-y-auto">
+          {NAV.map((item) => {
+            const active = item.id === tab;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setTab(item.id)}
+                className={[
+                  'w-full flex items-center gap-4 px-6 py-3.5 transition-all active:translate-x-1',
+                  active
+                    ? 'text-primary font-bold border-r-4 border-primary bg-surface-container-low'
+                    : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface',
+                ].join(' ')}
+              >
+                <span className="material-symbols-outlined">{item.icon}</span>
+                <span className="text-base">{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div className="bg-surface-container-low p-4 rounded-lg border border-outline-variant flex flex-col gap-1">
+            <span className="font-mono text-[10px] tracking-wider text-secondary">ACTIVE SESSION</span>
+            <p className="text-sm text-on-surface">Ear Training Active</p>
+          </div>
+          <button className="w-full py-3.5 px-4 bg-primary-container text-on-primary-container font-semibold rounded-lg active:scale-95 transition-transform milled-button">
+            Upgrade Pro
+          </button>
+        </div>
+      </nav>
+
+      {/* ── Main content ── */}
+      <main className="flex-1 h-full overflow-hidden">
+        {tab === 'trainer' && <TrainerScreen />}
+        {tab === 'chords' && <ChordScreen />}
         {tab === 'progressions' && <ProgressionScreen />}
-        {tab === 'melodic'      && <MelodicScreen />}
-        {tab === 'challenge'    && <ChallengeScreen />}
-        {tab === 'stats'        && <StatsScreen />}
-        {tab === 'settings'     && <SettingsScreen />}
+        {tab === 'melodic' && <MelodicScreen />}
+        {tab === 'challenge' && <ChallengeScreen />}
+        {tab === 'stats' && <StatsScreen />}
+        {tab === 'settings' && <SettingsScreen />}
       </main>
     </div>
-  );
-}
-
-function NavTab({
-  id, current, label, icon, onClick,
-}: { id: Tab; current: Tab; label: string; icon: ReactNode; onClick: (t: Tab) => void }) {
-  const active = id === current;
-  return (
-    <button
-      onClick={() => onClick(id)}
-      className={[
-        'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition',
-        active
-          ? 'bg-primary-fixed-dim/15 text-primary-fixed-dim shadow-[inset_0_0_0_1px_rgba(0,218,243,0.25)]'
-          : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high',
-      ].join(' ')}
-    >
-      {icon}
-      {label}
-    </button>
   );
 }
